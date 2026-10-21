@@ -271,6 +271,39 @@
     return { items: items, unplaced: unplaced };
   }
 
+  /** recompute module flow points and the travel total after a manual move.
+      The offset between a module's box centre and its flow point is captured once,
+      so an untouched layout keeps exactly the same figure. */
+  function recomputeFlow(layout) {
+    let total = 0;
+    (layout.order || []).forEach((unit) => {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, n = 0;
+      (layout.items || []).forEach((it) => {
+        if (it.id === unit.id || it.id.indexOf(unit.id + '-') === 0) {
+          x0 = Math.min(x0, it.rect.x); y0 = Math.min(y0, it.rect.y);
+          x1 = Math.max(x1, it.rect.x + it.rect.w); y1 = Math.max(y1, it.rect.y + it.rect.h);
+          n++;
+        }
+      });
+      if (!n) return;
+      const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+      if (!unit.flowOffset) unit.flowOffset = { x: unit.flow.x - cx, y: unit.flow.y - cy };
+      unit.bbox = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+      unit.flow = { x: cx + unit.flowOffset.x, y: cy + unit.flowOffset.y };
+    });
+
+    const byId = {};
+    (layout.order || []).forEach((u) => { byId[u.id] = u; });
+    (layout.legs || []).forEach((leg) => {
+      const a = byId[leg.from], b = byId[leg.to];
+      if (!a || !b) return;
+      leg.distance = Math.hypot(a.flow.x - b.flow.x, a.flow.y - b.flow.y);
+      total += leg.distance;
+    });
+    layout.metrics.flow = total;
+    return total;
+  }
+
   /* ---------- top level ---------- */
   function plan(state) {
     const C = cfg();
@@ -444,5 +477,5 @@
     };
   }
 
-  WPE.Planner = { plan, buildUnits, pack, placeTrolleys };
+  WPE.Planner = { plan, buildUnits, pack, placeTrolleys, recomputeFlow };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

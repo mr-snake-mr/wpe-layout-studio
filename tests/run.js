@@ -106,6 +106,22 @@ t1.rect.y = 10; // push a trolley into the walkway band
 const chk2 = WPE.Checker.evaluate(tight, badState.rules, tight.hall);
 assert(chk2.rules.find((r) => r.id === 'R7').pass === false, 'checker flags trolleys outside the perimeter band');
 
+/* 4b. flow recompute (used by drag-to-adjust) */
+console.log('\nManual edit maths');
+const editState = C.cloneState(C.DEFAULT_STATE);
+const editPlan = WPE.Planner.plan(editState);
+const before = editPlan.layout.metrics.flow;
+WPE.Planner.recomputeFlow(editPlan.layout);
+assert(Math.abs(editPlan.layout.metrics.flow - before) < 1e-6,
+  'recomputing flow on an untouched layout keeps the figure');
+const moved = editPlan.layout.items.find((i) => i.kind === 'machine');
+moved.rect.x += 1000;
+const after = WPE.Planner.recomputeFlow(editPlan.layout);
+assert(Math.abs(after - before) > 1, 'flow responds to a manual move (one leg shortens, the next lengthens)');
+assert(Math.abs(after - before) <= 2000, 'flow change stays within the size of the move');
+const movedCheck = WPE.Checker.evaluate(editPlan.layout, editState.rules, editPlan.layout.hall);
+assert(movedCheck.rules.length === 8, 'rule engine still runs on an edited layout');
+
 /* 5. scaling sweep */
 console.log('\nSweep');
 let sweepBad = 0, sweepCount = 0;

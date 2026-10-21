@@ -25,7 +25,11 @@ no build step, no backend and no external dependency.
    directions. Every candidate is a real, complete layout — not a sketch.
 4. **Rule verification.** The engine recomputes all clearances from the produced geometry and flood-fills a raster of
    the hall to prove the walkway is continuous. A layout only wins if it passes all eight checks.
-5. **Delivery.** Canvas visualisation with hover inspection, plus PNG, DXF (R12, mm) and JSON exports and a CSV BOM.
+5. **Delivery.** Canvas visualisation with hover inspection, plus PNG, DXF (R12, mm), JSON, CSV and a printable HTML
+   report.
+6. **Manual adjustment.** Any resource can be dragged on the plan (5 cm snap) and the rule engine re-checks the whole
+   layout on every move — the compliance panel and the walkway flood-fill update live, so a what-if nudge immediately
+   shows the rule it breaks. Undo with the toolbar button or Ctrl+Z.
 
 ## The rules enforced
 
@@ -41,6 +45,15 @@ no build step, no backend and no external dependency.
 | R7 | Trolleys only in the perimeter band, clear of the walkway and of production resources |
 
 All thresholds are editable in the UI; the engine and the report use the same numbers you set.
+
+## Adjust by hand, checked by machine
+
+The generated plan is a starting point, not a straitjacket. Drag any robot, machine, fixture, controller or trolley and
+the rule engine re-evaluates the whole layout on the way — the verdict, the KPI strip and every rule row update while
+the pointer is still moving, and the walkway flood-fill runs again. The example below is a robot dropped onto Machine 1:
+R1 collapses to 0 mm, R0 reports the overlap, the badge drops to 6/8 — then Ctrl+Z puts it back.
+
+![Manual drag breaking R1 — 6/8 rules, live verdict](docs/preview-edit.png)
 
 ## Two layouts
 
@@ -61,7 +74,8 @@ previous footprint when you switch back.
 - **Shopfloor footprint** — hall length × width, straight from the allocated area on the sample drawing.
 - **Production plan** — JPH, cycle time, per-activity work times and the derived resource count.
 - **Resource counts** — robots, machines, trolleys; fixtures, controllers and the two safety zones are derived.
-- **Stage** — canvas plan with zones, walkway, fences, material-flow arrows, zoom / pan / hover and toggles.
+- **Stage** — canvas plan with zones, walkway, fences, material-flow arrows, zoom / pan / hover, drag-to-adjust with
+  live rule checking, and layer toggles.
 - **Results** — verdict, KPIs (material flow, rows, space used, rules passed), per-rule compliance with click-to-
   highlight, the list of alternatives evaluated, and diagnostics.
 

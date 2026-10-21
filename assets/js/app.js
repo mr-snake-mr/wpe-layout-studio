@@ -22,6 +22,10 @@
   let activeRule = null;
   let needsFit = true;
   let timer = null;
+  let edited = false;
+  let pristine = null;
+  let history = [];
+  const SNAP = 50; // manual moves snap to 5 cm
 
   /* ---------------- state <-> inputs ---------------- */
   function readState() {
@@ -155,6 +159,8 @@
   function compute() {
     readState();
     refreshPlanPreview();
+    edited = false;
+    history = [];
     try {
       result = P.plan(state);
     } catch (err) {
@@ -165,6 +171,7 @@
     }
     const layout = result.layout;
     renderer.setLayout(layout);
+    pristine = snapshot();
     if (needsFit) { renderer.fit(); needsFit = false; } else { renderer.draw(); }
     renderVerdict();
     renderKpis();
@@ -179,18 +186,20 @@
     el.className = 'verdict';
     const pass = result.check.passCount;
     const total = result.check.rules.length;
-    if (result.status === 'ok') {
+    const fits = result.layout.metrics.fits;
+    const suffix = edited ? ' Manually adjusted — press Optimise to regenerate.' : '';
+    if (result.check.compliant && fits) {
       $('statusPill').textContent = 'compliant';
       $('verdictText').textContent =
         'All ' + total + ' checks pass. Best of ' + result.alternatives.length +
         ' generated arrangements — ' + (result.layout.metrics.flow / 1000).toFixed(1) +
-        ' m material travel, ' + result.layout.metrics.rows + ' process row(s).';
-    } else if (result.status === 'violations') {
+        ' m material travel, ' + result.layout.metrics.rows + ' process row(s).' + suffix;
+    } else if (fits) {
       el.className = 'verdict warn';
       $('statusPill').textContent = 'violations';
       $('verdictText').textContent =
         'Layout fits but ' + (total - pass) + ' of ' + total +
-        ' rules fail. Relax a clearance, add floor area or reduce resources.';
+        ' rules fail. Relax a clearance, add floor area or reduce resources.' + suffix;
     } else {
       el.className = 'verdict bad';
       $('statusPill').textContent = 'does not fit';
@@ -208,8 +217,9 @@
       : (m.snake ? 'serpentine' : 'straight') + ' · gap ' + (m.rowGap / 1000).toFixed(1) + ' m';
     $('kpiUtil').textContent = Math.round(m.utilisation * 100) + ' %';
     $('kpiRules').textContent = result.check.passCount + '/' + result.check.rules.length;
-    $('stageNote').textContent = 'scroll to zoom · drag to pan · ' +
-      (m.snake ? 'serpentine' : 'straight') + ' flow · module gap ' + m.unitGap + ' mm';
+    $('stageNote').textContent = edited
+      ? 'editing manually · drag resources · Ctrl+Z undo'
+      : 'drag a resource to adjust · Ctrl+Z undo · ' + (m.snake ? 'serpentine' : 'straight') + ' flow';
   }
 
   function renderRules() {
@@ -276,6 +286,49 @@
     });
   }
 
+  /* ---------------- manual editing with live rule feedback ---------------- */
+  function snapshot() {
+    return (result ? result.layout.items.map((it) => ({ id: it.id, x: it.rect.x, y: it.rect.y })) : []);
+  }
+  function restore(snap) {
+    if (!result || !snap) return;
+    const byId = {};
+    result.layout.items.forEach((it) => { byId[it.id] = it; });
+    snap.forEach((s) => {
+      if (byId[s.id]) { byId[s.id].rect.x = s.x; byId[s.id].rect.y = s.y; }
+    });
+  }
+
+  /** true when every resource still sits where the generator put it */
+  function isPristine() {
+    if (!result || !pristine) return true;
+    const now = snapshot();
+    if (now.length !== pristine.length) return false;
+    for (let i = 0; i < now.length; i++) {
+      if (now[i].id !== pristine[i].id) return false;
+      if (Math.abs(now[i].x - pristine[i].x) > 0.5 || Math.abs(now[i].y - pristine[i].y) > 0.5) return false;
+    }
+    return true;
+  }
+
+  function liveCheck() {
+    if (!result) return;
+    P.recomputeFlow(result.layout);
+    result.check = WPE.Checker.evaluate(result.layout, state.rules, result.layout.hall);
+    edited = !isPristine();
+    renderVerdict();
+    renderKpis();
+    renderRules();
+  }
+
+  function undo() {
+    const snap = history.pop();
+    if (!snap) return;
+    restore(snap);
+    liveCheck();
+    renderer.draw();
+  }
+
   /* ---------------- interactions ---------------- */
   function applyPreset(key) {
     if (key === 'custom') return;
@@ -338,6 +391,7 @@
     renderer.zoomAt(1 / 1.22, { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 });
   });
   $('fitBtn').addEventListener('click', () => renderer.fit());
+  $('undoBtn').addEventListener('click', undo);
 
   document.querySelectorAll('.toggle').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -347,12 +401,25 @@
     });
   });
 
-  /* canvas pan / zoom / hover */
+  /* canvas pan / item drag / zoom / hover */
   let dragging = false;
   let dragStart = null;
   let moved = false;
+  let itemDrag = null;
 
   canvas.addEventListener('pointerdown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const screen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const hit = renderer.hitTest(screen);
+    if (hit && hit.kind !== 'fence') {
+      const w = renderer.toWorld(screen);
+      history.push(snapshot());
+      if (history.length > 30) history.shift();
+      itemDrag = { item: hit, dx: w.x - hit.rect.x, dy: w.y - hit.rect.y };
+      canvas.setPointerCapture(e.pointerId);
+      canvas.style.cursor = 'grabbing';
+      return;
+    }
     dragging = true;
     moved = false;
     dragStart = { x: e.clientX, y: e.clientY, vx: renderer.view.x, vy: renderer.view.y };
@@ -360,6 +427,16 @@
   });
 
   canvas.addEventListener('pointermove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    if (itemDrag) {
+      const w = renderer.toWorld({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      itemDrag.item.rect.x = Math.round((w.x - itemDrag.dx) / SNAP) * SNAP;
+      itemDrag.item.rect.y = Math.round((w.y - itemDrag.dy) / SNAP) * SNAP;
+      renderer.draw();
+      liveCheck();
+      hideTooltip();
+      return;
+    }
     if (dragging && dragStart) {
       const dx = (e.clientX - dragStart.x) / renderer.view.scale;
       const dy = (e.clientY - dragStart.y) / renderer.view.scale;
@@ -370,14 +447,19 @@
       hideTooltip();
       return;
     }
-    const rect = canvas.getBoundingClientRect();
     const it = renderer.hitTest({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     renderer.setHover(it);
+    canvas.style.cursor = it && it.kind !== 'fence' ? 'move' : 'grab';
     if (it) showTooltip(it, e.clientX - rect.left, e.clientY - rect.top);
     else hideTooltip();
   });
 
   canvas.addEventListener('pointerup', (e) => {
+    if (itemDrag) {
+      itemDrag = null;
+      canvas.style.cursor = 'grab';
+      liveCheck();
+    }
     dragging = false;
     dragStart = null;
     if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
@@ -387,6 +469,14 @@
     renderer.setHover(null);
     hideTooltip();
     dragging = false;
+    if (itemDrag) { itemDrag = null; liveCheck(); }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      undo();
+    }
   });
 
   canvas.addEventListener('wheel', (e) => {
