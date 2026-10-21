@@ -48,6 +48,15 @@ no build step, no backend and no external dependency.
 
 All thresholds are editable in the UI; the engine and the report use the same numbers you set.
 
+## Read the footprint off the drawing
+
+The brief ships a DWG; the app reads **DXF** directly (export the DWG as DXF R12 or later — every CAD tool does it).
+`assets/js/importer.js` parses `LINE`, `LWPOLYLINE`, old-style `POLYLINE`/`VERTEX`, `CIRCLE` and `ARC`, honours
+`$INSUNITS` (mm, cm, m, inches, feet) and picks the largest closed outline as the hall; if there is no closed outline it
+falls back to the drawing extents. One click sets the footprint and the layout re-solves.
+
+![Imported 30 × 18 m footprint read from a DXF](docs/preview-import.png)
+
 ## Adjust by hand, checked by machine
 
 The generated plan is a starting point, not a straitjacket. Drag any robot, machine, fixture, controller or trolley and
@@ -105,8 +114,9 @@ The geometry engine is shared between the browser and Node, so the same code tha
 test:
 
 ```bash
-node tests/run.js           # engine: 3 presets, JPH maths, negative tests, 60-combination sweep
+node tests/run.js           # engine: presets, JPH maths, negative tests, objectives, 60-hall sweep
 node tests/render-smoke.js  # real canvas code against a stub context + DXF/JSON/CSV/report output
+node tests/import-test.js   # DXF reader fixtures: mm, inches, R12, bad input
 node tests/dom-check.js     # every element the UI touches exists, every script/style resolves
 
 # DXF sanity check against a real CAD parser (optional, needs python + ezdxf)
@@ -136,11 +146,13 @@ assets/js/config.js        resource catalogue, rule thresholds, presets, JPH mat
 assets/js/geometry.js      rectangle maths, raster + flood fill
 assets/js/planner.js       module builder, row packer, perimeter trolley placement, search
 assets/js/checker.js       the eight rule checks, recomputed from geometry
+assets/js/importer.js      DXF reader (units, closed outline, legacy POLYLINE)
 assets/js/renderer.js      canvas renderer (mm → px), pan / zoom / hit-test
 assets/js/exporters.js     DXF / JSON / CSV / PNG writers
 assets/js/app.js           DOM wiring
 tests/run.js               headless engine assertions
 tests/render-smoke.js      renderer + exporter assertions
+tests/import-test.js       DXF import: mm, inch, R12 vertex stream, bad input
 tests/dom-check.js         static wiring assertions
 tests/export-dxf.js        writes a DXF sample for the CAD validator
 tests/validate_dxf.py      ezdxf validation of that DXF (optional tool)

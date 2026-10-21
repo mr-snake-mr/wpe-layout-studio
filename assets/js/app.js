@@ -375,6 +375,36 @@
     });
   });
 
+  /* read the hall footprint straight from a CAD drawing */
+  $('importBtn').addEventListener('click', () => $('dxfInput').click());
+  $('dxfInput').addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    $('importHint').textContent = 'Reading ' + file.name + '…';
+    window.WPE.Importer.readFile(file, (res) => {
+      if (!res.ok) {
+        $('importHint').textContent = 'Import failed — ' + res.error;
+        return;
+      }
+      const snap = (v) => Math.round(v / 500) * 500;
+      const w = snap(res.bbox.w);
+      const h = snap(res.bbox.h);
+      if (w < 4000 || h < 4000 || w > 200000 || h > 200000) {
+        $('importHint').textContent = 'Detected ' + (res.bbox.w / 1000).toFixed(1) + ' × ' +
+          (res.bbox.h / 1000).toFixed(1) + ' m — outside the supported 4–200 m range.';
+        return;
+      }
+      state.hall = { w: w, h: h };
+      writeState(state, { fit: true });
+      compute();
+      $('importHint').textContent = 'Imported ' + res.name + ': ' +
+        (w / 1000).toFixed(1) + ' × ' + (h / 1000).toFixed(1) + ' m from ' +
+        (res.usedClosedOutline ? 'the closed outline' : 'the drawing extents') +
+        ' (' + res.entities + ' entities).';
+    });
+    e.target.value = '';
+  });
+
   ['hallW', 'hallH', 'jphInput', 'cRobots', 'cMachine1', 'cMachine2', 'cTrolley1', 'cTrolley2',
     'bRobots', 'bMachine1', 'bMachine2']
     .forEach((id) => {

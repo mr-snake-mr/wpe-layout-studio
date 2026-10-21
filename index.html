@@ -75,7 +75,9 @@
           <button type="button" class="segbtn" data-obj="compact">Compact cell</button>
         </div>
       </div>
-      <p class="hint">Taken from the allocated area on the sample layout. Everything scale-dependent is recomputed live.</p>
+      <button id="importBtn" type="button" class="btn subtle wide">Import hall outline from DXF…</button>
+      <input id="dxfInput" type="file" accept=".dxf" hidden />
+      <p class="hint" id="importHint">Taken from the allocated area on the sample layout. Have the DWG? Export it as DXF (R12 or later) and import it here to read the footprint straight off the drawing.</p>
     </section>
 
     <section class="block">
@@ -244,6 +246,7 @@
 <script src="assets/js/geometry.js"></script>
 <script src="assets/js/checker.js"></script>
 <script src="assets/js/planner.js"></script>
+<script src="assets/js/importer.js"></script>
 <script src="assets/js/renderer.js"></script>
 <script src="assets/js/exporters.js"></script>
 <script src="assets/js/app.js"></script>

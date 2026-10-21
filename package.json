@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "wpe-layout-studio",
   "version": "1.0.0",
   "private": true,
@@ -6,8 +6,9 @@
   "keywords": ["shopfloor", "layout", "optimisation", "manufacturing", "welding", "dxf"],
   "license": "MIT",
   "scripts": {
-    "test": "node tests/run.js && node tests/render-smoke.js && node tests/dom-check.js",
+    "test": "node tests/run.js && node tests/render-smoke.js && node tests/import-test.js && node tests/dom-check.js",
     "test:dxf": "node tests/export-dxf.js && python tests/validate_dxf.py",
     "serve": "python -m http.server 8080"
   }
 }
+

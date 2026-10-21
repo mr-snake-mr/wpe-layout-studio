@@ -26,6 +26,7 @@ jobs:
         run: |
           node tests/run.js
           node tests/render-smoke.js
+          node tests/import-test.js
           node tests/dom-check.js
 
   deploy:
@@ -42,4 +43,5 @@ jobs:
           path: .
       - id: deployment
         uses: actions/deploy-pages@v4
+
 
