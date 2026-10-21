@@ -161,6 +161,26 @@
         ctx.strokeRect(ps2.x, ps2.y, ps2.w, ps2.h);
         ctx.setLineDash([]);
 
+        // two-station layouts: divider + station captions
+        if (layout.zones.stations) {
+          const st = layout.zones.stations;
+          const a = sr(st.a), b = sr(st.b);
+          ctx.save();
+          ctx.strokeStyle = 'rgba(148,163,184,0.35)';
+          ctx.setLineDash([4, 6]);
+          ctx.beginPath();
+          ctx.moveTo(a.x + a.w, a.y); ctx.lineTo(a.x + a.w, a.y + a.h);
+          ctx.moveTo(b.x, b.y); ctx.lineTo(b.x, b.y + b.h);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          font(11);
+          ctx.fillStyle = 'rgba(226,232,240,0.55)';
+          ctx.textAlign = 'left';
+          ctx.fillText('STATION 1', a.x + 6, a.y + 14);
+          ctx.fillText('STATION 2', b.x + 6, b.y + 14);
+          ctx.restore();
+        }
+
         // walkway caption
         if (view.scale * 1200 > 26) {
           ctx.save();

@@ -152,6 +152,16 @@ select { cursor: pointer; }
 }
 
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+.mode-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 11px; }
+.mode-row > span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-faint); }
+.mode-row .seg { flex: 0 0 auto; }
+.segbtn {
+  border: 0; background: transparent; color: var(--text-faint);
+  padding: 5px 9px; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit;
+}
+.segbtn.on { background: rgba(14, 165, 233, 0.18); color: #bae6fd; font-weight: 600; }
+.segbtn:hover { color: var(--text); }
 .count-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 
 .hint { margin: 9px 0 0; font-size: 11px; line-height: 1.5; color: var(--text-faint); }

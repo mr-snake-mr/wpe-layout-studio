@@ -30,6 +30,7 @@
         <option value="station1">Station 1 — 3 robots</option>
         <option value="station2">Station 2 — 5 robots</option>
         <option value="compact">Compact cell — 19 × 13 m</option>
+        <option value="dual">Two stations — Station 1 + 2</option>
         <option value="custom">Custom</option>
       </select>
     </label>
@@ -59,6 +60,13 @@
         <label class="field"><span>Width (m)</span>
           <input id="hallH" type="number" min="4" max="200" step="0.5" value="13" />
         </label>
+      </div>
+      <div class="mode-row">
+        <span>Layout mode</span>
+        <div class="seg" id="modeSeg">
+          <button type="button" class="segbtn on" data-mode="single">One station</button>
+          <button type="button" class="segbtn" data-mode="dual">Two stations</button>
+        </div>
       </div>
       <p class="hint">Taken from the allocated area on the sample layout. Everything scale-dependent is recomputed live.</p>
     </section>
@@ -91,6 +99,16 @@
         <label class="field"><span>Safety zones</span><input id="cZones" type="number" value="2" disabled /></label>
       </div>
       <p class="hint">Loading / unload fixtures, one robot controller per robot and the two fenced cells are derived automatically.</p>
+    </section>
+
+    <section class="block" id="stationBBlock" hidden>
+      <h2>Second line — Station 2</h2>
+      <div class="count-grid">
+        <label class="field"><span>Robots</span><input id="bRobots" type="number" min="0" max="12" step="1" value="5" /></label>
+        <label class="field"><span>Machine 1</span><input id="bMachine1" type="number" min="0" max="6" step="1" value="1" /></label>
+        <label class="field"><span>Machine 2</span><input id="bMachine2" type="number" min="0" max="6" step="1" value="0" /></label>
+      </div>
+      <p class="hint">Both lines share the hall, the perimeter trolleys and the pedestrian ring; a walkway separates the two cells.</p>
     </section>
 
     <section class="block">

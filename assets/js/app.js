@@ -48,6 +48,11 @@
       trolley1: Math.max(0, Math.round(num($('cTrolley1'), 8))),
       trolley2: Math.max(0, Math.round(num($('cTrolley2'), 1)))
     };
+    state.countsB = {
+      robots: Math.max(0, Math.round(num($('bRobots'), 5))),
+      machine1: Math.max(0, Math.round(num($('bMachine1'), 1))),
+      machine2: Math.max(0, Math.round(num($('bMachine2'), 0)))
+    };
     return state;
   }
 
@@ -66,8 +71,37 @@
     $('cMachine2').value = state.counts.machine2;
     $('cTrolley1').value = state.counts.trolley1;
     $('cTrolley2').value = state.counts.trolley2;
+    $('bRobots').value = (state.countsB || {}).robots != null ? state.countsB.robots : 5;
+    $('bMachine1').value = (state.countsB || {}).machine1 || 0;
+    $('bMachine2').value = (state.countsB || {}).machine2 || 0;
+    setMode(state.mode === 'dual' ? 'dual' : 'single', true);
     if (opts && opts.activities) buildActivityRows();
     if (!opts || opts.fit !== false) needsFit = true;
+  }
+
+  /** mode = one process line, or the two stations of the brief side by side */
+  let widenedFrom = null;
+  function setMode(mode, silent) {
+    state.mode = mode === 'dual' ? 'dual' : 'single';
+    document.querySelectorAll('#modeSeg .segbtn').forEach((btn) => {
+      btn.classList.toggle('on', btn.dataset.mode === state.mode);
+    });
+    $('stationBBlock').hidden = state.mode !== 'dual';
+    if (silent) return;
+
+    if (state.mode === 'dual' && state.hall.w < 30000) {
+      // two lines need a wider footprint than a single cell — remember what to go back to
+      widenedFrom = { w: state.hall.w, h: state.hall.h };
+      state.hall = { w: 34000, h: Math.max(16000, state.hall.h) };
+      writeState(state, { fit: true });
+    } else if (state.mode === 'single' && widenedFrom) {
+      state.hall = widenedFrom;
+      widenedFrom = null;
+      writeState(state, { fit: true });
+    } else {
+      needsFit = true;
+    }
+    compute();
   }
 
   /* ---------------- activity table ---------------- */
@@ -169,8 +203,9 @@
     const m = result.layout.metrics;
     $('kpiFlow').textContent = (m.flow / 1000).toFixed(1) + ' m';
     $('kpiRows').textContent = m.rows;
-    $('kpiRowsEm').textContent = (m.snake ? 'serpentine' : 'straight') +
-      ' · gap ' + (m.rowGap / 1000).toFixed(1) + ' m';
+    $('kpiRowsEm').textContent = m.dual
+      ? 'A ' + m.rowsByStation[0] + ' · B ' + m.rowsByStation[1] + ' rows'
+      : (m.snake ? 'serpentine' : 'straight') + ' · gap ' + (m.rowGap / 1000).toFixed(1) + ' m';
     $('kpiUtil').textContent = Math.round(m.utilisation * 100) + ' %';
     $('kpiRules').textContent = result.check.passCount + '/' + result.check.rules.length;
     $('stageNote').textContent = 'scroll to zoom · drag to pan · ' +
@@ -247,19 +282,27 @@
     const p = C.PRESETS[key];
     state = C.cloneState({
       preset: key,
+      mode: p.mode || 'single',
       hall: p.hall,
       rules: Object.assign({}, C.RULES, state.rules),
       jph: p.jph,
       activities: p.activities,
-      counts: p.counts
+      counts: p.counts,
+      countsB: p.countsB || { robots: 5, machine1: 1, machine2: 0 }
     });
+    widenedFrom = null;
     writeState(state, { activities: true, fit: true });
     compute();
   }
 
   $('presetSelect').addEventListener('change', (e) => applyPreset(e.target.value));
 
-  ['hallW', 'hallH', 'jphInput', 'cRobots', 'cMachine1', 'cMachine2', 'cTrolley1', 'cTrolley2']
+  document.querySelectorAll('#modeSeg .segbtn').forEach((btn) => {
+    btn.addEventListener('click', () => setMode(btn.dataset.mode));
+  });
+
+  ['hallW', 'hallH', 'jphInput', 'cRobots', 'cMachine1', 'cMachine2', 'cTrolley1', 'cTrolley2',
+    'bRobots', 'bMachine1', 'bMachine2']
     .forEach((id) => {
       $(id).addEventListener('input', () => {
         if (id === 'hallW' || id === 'hallH') needsFit = true;

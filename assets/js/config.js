@@ -83,16 +83,33 @@
         { name: 'Unload part', time: 18 }
       ],
       counts: { robots: 2, machine1: 1, machine2: 0, trolley1: 6, trolley2: 1 }
+    },
+    dual: {
+      name: 'Two stations — Station 1 + Station 2',
+      mode: 'dual',
+      hall: { w: 34000, h: 16000 },
+      jph: 60,
+      activities: [
+        { name: 'Load part on fixture', time: 20 },
+        { name: 'Robotic welding / handling', time: 150 },
+        { name: 'Machine 1 process', time: 45 },
+        { name: 'Machine 2 process', time: 50 },
+        { name: 'Unload part', time: 20 }
+      ],
+      counts: { robots: 3, machine1: 1, machine2: 1, trolley1: 8, trolley2: 1 },
+      countsB: { robots: 5, machine1: 1, machine2: 0 }
     }
   };
 
   const DEFAULT_STATE = {
     preset: 'station1',
+    mode: 'single',
     hall: { w: 24000, h: 13000 },
     rules: Object.assign({}, RULES),
     jph: 60,
     activities: PRESETS.station1.activities.map((a) => ({ name: a.name, time: a.time })),
-    counts: Object.assign({}, PRESETS.station1.counts)
+    counts: Object.assign({}, PRESETS.station1.counts),
+    countsB: { robots: 5, machine1: 1, machine2: 0 }
   };
 
   /* --- JPH helpers ---------------------------------------- */

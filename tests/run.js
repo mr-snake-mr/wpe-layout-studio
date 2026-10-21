@@ -58,6 +58,25 @@ s3.preset = 'compact';
 const r3 = runState('Compact cell — 19 x 13 m', s3);
 assert(r3.status === 'ok', 'compact cell is compliant');
 
+/* 2b. both stations of the brief in one hall */
+const s4 = C.cloneState({
+  preset: 'dual',
+  mode: 'dual',
+  hall: C.PRESETS.dual.hall,
+  rules: C.RULES,
+  jph: 60,
+  activities: C.PRESETS.dual.activities,
+  counts: C.PRESETS.dual.counts,
+  countsB: C.PRESETS.dual.countsB
+});
+const r4 = runState('Two stations — 3 + 5 robots', s4);
+assert(r4.status === 'ok', 'two-station layout is compliant and fits');
+assert(r4.layout.items.filter((i) => i.kind === 'robot').length === 8, 'two-station layout places 8 robots');
+assert(r4.layout.fences.length === 4, 'each station gets its two fenced cells');
+assert(r4.layout.metrics.rowsByStation.length === 2, 'rows are reported per station');
+assert(r4.layout.stations && r4.layout.stations[1].rect.x > r4.layout.stations[0].rect.x,
+  'station 2 sits beside station 1');
+
 /* 3. resource maths */
 console.log('\nJPH maths');
 assert(Math.abs(C.cycleTime(60) - 60) < 1e-9, 'cycle time for 60 JPH = 60 s');

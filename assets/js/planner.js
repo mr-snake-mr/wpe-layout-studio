@@ -81,28 +81,29 @@
     };
   }
 
-  function buildUnits(state, rules) {
-    const c = state.counts || {};
+  function buildUnits(counts, rules, prefix) {
+    const c = counts || {};
+    const p = prefix || '';
     const units = [];
-    units.push(fixtureUnit('u-load', 'loading_fixture', 'Loading fixture'));
+    units.push(fixtureUnit(p + 'u-load', 'loading_fixture', 'Loading fixture'));
     const n = Math.max(0, c.robots | 0);
     let cellA = 0, cellB = 0;
     if (n > 0) {
       const cells = n >= 2 ? 2 : 1;
       cellA = Math.ceil(n / cells);
       cellB = n - cellA;
-      units.push(cellUnit('cell-a', cellA, rules, 'Safety zone A'));
+      units.push(cellUnit(p + 'cell-a', cellA, rules, 'Safety zone A'));
     }
     const m1 = Math.max(0, c.machine1 | 0);
     for (let i = 0; i < m1; i++) {
-      units.push(machineUnit('m1-' + (i + 1), 'machine1', m1 > 1 ? 'Machine 1.' + (i + 1) : 'Machine 1'));
+      units.push(machineUnit(p + 'm1-' + (i + 1), 'machine1', m1 > 1 ? 'Machine 1.' + (i + 1) : 'Machine 1'));
     }
     const m2 = Math.max(0, c.machine2 | 0);
     for (let i = 0; i < m2; i++) {
-      units.push(machineUnit('m2-' + (i + 1), 'machine2', m2 > 1 ? 'Machine 2.' + (i + 1) : 'Machine 2'));
+      units.push(machineUnit(p + 'm2-' + (i + 1), 'machine2', m2 > 1 ? 'Machine 2.' + (i + 1) : 'Machine 2'));
     }
-    if (cellB > 0) units.push(cellUnit('cell-b', cellB, rules, 'Safety zone B'));
-    units.push(fixtureUnit('u-unload', 'unload_fixture', 'Unload fixture'));
+    if (cellB > 0) units.push(cellUnit(p + 'cell-b', cellB, rules, 'Safety zone B'));
+    units.push(fixtureUnit(p + 'u-unload', 'unload_fixture', 'Unload fixture'));
     return units;
   }
 
@@ -291,7 +292,24 @@
         geo.fmtMm(prod.w) + ' x ' + geo.fmtMm(prod.h) + ' — enlarge the hall footprint.');
     }
 
-    const units = buildUnits(state, rules);
+    /* one station, or the two stations of the brief side by side */
+    const dual = state.mode === 'dual';
+    const betweenStations = Math.max(aisle, 1200);
+    let groups;
+    if (dual) {
+      const halfW = (prod.w - betweenStations) / 2;
+      groups = [
+        { id: 'A', rect: { x: prod.x, y: prod.y, w: halfW, h: prod.h }, units: buildUnits(state.counts, rules, 'a-') },
+        { id: 'B', rect: { x: prod.x + halfW + betweenStations, y: prod.y, w: halfW, h: prod.h }, units: buildUnits(state.countsB || {}, rules, 'b-') }
+      ];
+      zones.stations = { gap: betweenStations, a: groups[0].rect, b: groups[1].rect };
+      if (halfW < 6000) {
+        notes.push('Each station only gets ' + geo.fmtMm(halfW) + ' of width — a two-station layout needs a wider hall.');
+      }
+    } else {
+      groups = [{ id: 'A', rect: prod, units: buildUnits(state.counts, rules, '') }];
+    }
+
     const unitGapBase = Math.max(rules.machineGap, rules.fenceClearance);
     const candidates = [];
     const rowExtras = [0, 200, 400];
@@ -303,7 +321,25 @@
         snakes.forEach((snake) => {
           const rowGap = aisle + rx;
           const unitGap = unitGapBase + ux;
-          const packed = pack(units, prod, unitGap, rowGap, snake);
+          const packs = groups.map((grp) => pack(grp.units, grp.rect, unitGap, rowGap, snake));
+          const packed = {
+            items: packs.reduce((a, p) => a.concat(p.items), []),
+            fences: packs.reduce((a, p) => a.concat(p.fences), []),
+            order: packs.reduce((a, p) => a.concat(p.order), []),
+            legs: packs.reduce((a, p) => a.concat(p.legs), []),
+            flow: packs.reduce((a, p) => a + p.flow, 0),
+            rows: packs.reduce((a, p) => a + p.rows.length, 0),
+            neededW: Math.max.apply(null, packs.map((p) => p.neededW)),
+            totalH: Math.max.apply(null, packs.map((p) => p.totalH)),
+            fits: packs.every((p) => p.fits),
+            rowsByStation: packs.map((p) => p.rows.length)
+          };
+          if (dual) {
+            packed.items.forEach((it) => {
+              const cx = it.rect.x + it.rect.w / 2;
+              it.station = cx < groups[0].rect.x + groups[0].rect.w ? 'A' : 'B';
+            });
+          }
           const trol = placeTrolleys(hall, rules, state.counts || {}, band);
           const layout = {
             hall: hall, zones: zones, rules: rules,
@@ -311,12 +347,15 @@
             fences: packed.fences,
             order: packed.order,
             legs: packed.legs,
+            stations: groups.map((grp) => ({ id: grp.id, rect: grp.rect })),
             metrics: {
               flow: packed.flow,
-              rows: packed.rows.length,
+              rows: packed.rows,
+              rowsByStation: packed.rowsByStation,
               rowGap: rowGap,
               unitGap: unitGap,
               snake: snake,
+              dual: dual,
               fits: packed.fits,
               neededW: packed.neededW,
               neededH: packed.totalH,
@@ -361,9 +400,11 @@
 
     // notes / diagnostics
     if (!best.fits) {
-      if (best.layout.metrics.neededW > prod.w + 0.5) {
+      const availW = dual ? (prod.w - betweenStations) / 2 : prod.w;
+      if (best.layout.metrics.neededW > availW + 0.5) {
         notes.push('The process chain needs ' + geo.fmtMm(best.layout.metrics.neededW) +
-          ' of width but only ' + geo.fmtMm(prod.w) + ' is available — widen the hall.');
+          ' of width but only ' + geo.fmtMm(availW) + ' is available' +
+          (dual ? ' per station' : '') + ' — widen the hall.');
       }
       if (best.layout.metrics.neededH > prod.h + 0.5) {
         notes.push('The layout needs ' + geo.fmtMm(best.layout.metrics.neededH) +

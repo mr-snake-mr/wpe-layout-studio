@@ -42,6 +42,20 @@ no build step, no backend and no external dependency.
 
 All thresholds are editable in the UI; the engine and the report use the same numbers you set.
 
+## Two layouts
+
+The brief allocates one area for **two stations**, so the planner runs in two modes:
+
+- **One station** — a single process chain (loading → fenced robot cell → machines → fenced robot cell → unload).
+- **Two stations** — Station 1 and Station 2 side by side, each with its own chain, cells and controllers, separated by
+  a walkway, sharing the hall, the pedestrian ring and the perimeter trolleys. All eight rules are re-checked across
+  both lines, including the clearance between them.
+
+Switching to two stations widens the footprint to 34 × 16 m (a single cell cannot hold both chains) and restores the
+previous footprint when you switch back.
+
+![Two stations — 3 + 5 robots, four fenced cells, 8/8 rules](docs/preview-dual.png)
+
 ## Screens
 
 - **Shopfloor footprint** — hall length × width, straight from the allocated area on the sample drawing.
