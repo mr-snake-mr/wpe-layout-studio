@@ -21,8 +21,10 @@ no build step, no backend and no external dependency.
 2. **Module generation.** Loading fixture → fenced robot cell → Machine 1 → Machine 2 → fenced robot cell →
    unload fixture. Each fenced cell carries its own controllers *outside* the fence, so the 600 mm
    equipment-to-fence rule is satisfied by construction, not by luck.
-3. **Layout search.** Modules are packed into serpentine rows over a sweep of row gaps, module gaps and flow
-   directions. Every candidate is a real, complete layout — not a sketch.
+3. **Layout search.** Modules are packed into rows over a sweep of row-width caps, row and module gaps, flow directions
+   and machine orientation — 30 to 50 complete candidates per run, not a sketch. The winner is picked by a stated
+   objective: **shortest material flow** or **smallest footprint**, which diverge as soon as floor area is scarce
+   (e.g. 21.2 m travel in 94 m² vs 22.7 m in 74 m² on an 18 × 13 m hall).
 4. **Rule verification.** The engine recomputes all clearances from the produced geometry and flood-fills a raster of
    the hall to prove the walkway is continuous. A layout only wins if it passes all eight checks.
 5. **Delivery.** Canvas visualisation with hover inspection, plus PNG, DXF (R12, mm), JSON, CSV and a printable HTML
@@ -71,7 +73,8 @@ previous footprint when you switch back.
 
 ## Screens
 
-- **Shopfloor footprint** — hall length × width, straight from the allocated area on the sample drawing.
+- **Shopfloor footprint** — hall length × width, straight from the allocated area on the sample drawing, plus the
+  layout mode (one / two stations) and the objective (shortest flow / compact cell).
 - **Production plan** — JPH, cycle time, per-activity work times and the derived resource count.
 - **Resource counts** — robots, machines, trolleys; fixtures, controllers and the two safety zones are derived.
 - **Stage** — canvas plan with zones, walkway, fences, material-flow arrows, zoom / pan / hover, drag-to-adjust with

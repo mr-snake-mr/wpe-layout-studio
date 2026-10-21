@@ -81,6 +81,21 @@
     };
   }
 
+  /** turn a machine module 90° so its long side can run across the flow */
+  function rotateUnit(u) {
+    if (u.kind !== 'machine') return u;
+    return {
+      id: u.id, label: u.label, kind: u.kind,
+      w: u.h, h: u.w,
+      flowPoint: { x: u.h / 2, y: u.w / 2 },
+      items: u.items.map((it) => ({
+        id: it.id, kind: it.kind, type: it.type, label: it.label,
+        rect: { x: 0, y: 0, w: it.rect.h, h: it.rect.w }
+      })),
+      fences: []
+    };
+  }
+
   function buildUnits(counts, rules, prefix) {
     const c = counts || {};
     const p = prefix || '';
@@ -108,12 +123,13 @@
   }
 
   /* ---------- row packing ---------- */
-  function pack(units, prod, unitGap, rowGap, snake) {
+  function pack(units, prod, unitGap, rowGap, snake, rowCap) {
+    const maxRowWidth = prod.w * (rowCap || 1);
     const rows = [];
     let cur = { units: [], width: 0, height: 0 };
     units.forEach((u) => {
       const add = cur.units.length ? unitGap + u.w : u.w;
-      if (cur.units.length && cur.width + add > prod.w + 0.5) {
+      if (cur.units.length && cur.width + add > maxRowWidth + 0.5) {
         rows.push(cur);
         cur = { units: [], width: 0, height: 0 };
       }
@@ -345,16 +361,23 @@
 
     const unitGapBase = Math.max(rules.machineGap, rules.fenceClearance);
     const candidates = [];
-    const rowExtras = [0, 200, 400];
+    const rowExtras = [0, 200];
     const unitExtras = [0, 200];
     const snakes = [true, false];
+    const rowCaps = [1, 0.78, 0.6];
+    const rotations = [false, true];
 
+    rowCaps.forEach((rowCap) => {
+    rotations.forEach((rotated) => {
     rowExtras.forEach((rx) => {
       unitExtras.forEach((ux) => {
         snakes.forEach((snake) => {
           const rowGap = aisle + rx;
           const unitGap = unitGapBase + ux;
-          const packs = groups.map((grp) => pack(grp.units, grp.rect, unitGap, rowGap, snake));
+          const packs = groups.map((grp) => {
+            const units = rotated ? grp.units.map(rotateUnit) : grp.units;
+            return pack(units, grp.rect, unitGap, rowGap, snake, rowCap);
+          });
           const packed = {
             items: packs.reduce((a, p) => a.concat(p.items), []),
             fences: packs.reduce((a, p) => a.concat(p.fences), []),
@@ -387,14 +410,17 @@
               rowsByStation: packed.rowsByStation,
               rowGap: rowGap,
               unitGap: unitGap,
-              snake: snake,
-              dual: dual,
-              fits: packed.fits,
-              neededW: packed.neededW,
-              neededH: packed.totalH,
-              prodW: prod.w,
-              prodH: prod.h
-            }
+               snake: snake,
+               dual: dual,
+               rowCap: rowCap,
+               rotated: rotated,
+               fits: packed.fits,
+               neededW: packed.neededW,
+               neededH: packed.totalH,
+               footprintArea: packed.neededW * packed.totalH,
+               prodW: prod.w,
+               prodH: prod.h
+             }
           };
           const check = WPE.Checker.evaluate(layout, rules, hall);
           const usedArea = layout.items
@@ -403,31 +429,43 @@
           layout.metrics.usedArea = usedArea;
           layout.metrics.utilisation = usedArea / (prod.w * prod.h);
           layout.metrics.footprint = (packed.neededW * packed.totalH) / (prod.w * prod.h);
-          candidates.push({
-            label: 'row gap ' + rowGap + ' mm · module gap ' + unitGap + ' mm · ' +
-              (snake ? 'serpentine' : 'straight') + ' flow',
-            layout: layout, check: check,
-            fails: check.failCount, flow: packed.flow,
-            fits: packed.fits
-          });
-        });
-      });
+           candidates.push({
+             label: (Math.round(rowCap * 100) + '% row width · ' + (rotated ? 'machines turned' : 'machines inline') +
+               ' · gap ' + rowGap + '/' + unitGap + ' mm · ' + (snake ? 'serpentine' : 'straight')),
+             layout: layout, check: check,
+             fails: check.failCount, flow: packed.flow,
+             fits: packed.fits
+           });
+         });
+       });
+    });
+    });
     });
 
-    // dedupe identical metrics (small halls can collapse variants)
+    // dedupe identical arrangements (small halls can collapse variants)
     const seen = new Set();
     const unique = [];
     candidates.forEach((c) => {
-      const key = [c.layout.metrics.rows, Math.round(c.flow), c.layout.metrics.rowGap, c.fits].join('|');
+      const key = [
+        c.layout.metrics.rows, Math.round(c.flow), c.layout.metrics.rowGap,
+        Math.round(c.layout.metrics.neededW), Math.round(c.layout.metrics.neededH), c.fits
+      ].join('|');
       if (!seen.has(key)) { seen.add(key); unique.push(c); }
     });
 
+    const objective = state.objective === 'compact' ? 'compact' : 'flow';
     const feasible = unique.filter((c) => c.fits && c.check.compliant);
     const pool = feasible.length ? feasible : unique.filter((c) => c.fits);
     pool.sort((a, b) => {
       if (a.fails !== b.fails) return a.fails - b.fails;
+      const fa = a.layout.metrics.footprintArea;
+      const fb = b.layout.metrics.footprintArea;
+      if (objective === 'compact') {
+        if (Math.abs(fa - fb) > 1e6) return fa - fb;      // > 1 m² apart: footprint wins
+        return a.flow - b.flow;
+      }
       if (Math.abs(a.flow - b.flow) > 1) return a.flow - b.flow;
-      return b.layout.metrics.utilisation - a.layout.metrics.utilisation;
+      return fa - fb;
     });
     const best = pool[0] || unique[0];
 
@@ -467,9 +505,11 @@
       status: best.check.compliant && best.fits ? 'ok' : (best.fits ? 'violations' : 'infeasible'),
       layout: best.layout,
       check: best.check,
+      objective: objective,
       alternatives: unique.map((c) => ({
         label: c.label, fails: c.fails, flow: c.flow, fits: c.fits,
         rows: c.layout.metrics.rows, rowGap: c.layout.metrics.rowGap,
+        footprintArea: c.layout.metrics.footprintArea,
         compliant: c.check.compliant
       })).sort((a, b) => (a.fails - b.fails) || (a.flow - b.flow)),
       best: { label: best.label, flow: best.flow, fails: best.fails },

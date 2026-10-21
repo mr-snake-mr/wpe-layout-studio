@@ -122,6 +122,24 @@ assert(Math.abs(after - before) <= 2000, 'flow change stays within the size of t
 const movedCheck = WPE.Checker.evaluate(editPlan.layout, editState.rules, editPlan.layout.hall);
 assert(movedCheck.rules.length === 8, 'rule engine still runs on an edited layout');
 
+/* 4c. search breadth + objective */
+console.log('\nSearch');
+const tightState = C.cloneState(C.DEFAULT_STATE);
+tightState.hall = { w: 18000, h: 13000 };
+tightState.counts = { robots: 5, machine1: 1, machine2: 1, trolley1: 6, trolley2: 1 };
+tightState.objective = 'flow';
+const flowPick = WPE.Planner.plan(tightState);
+tightState.objective = 'compact';
+const compactPick = WPE.Planner.plan(tightState);
+assert(flowPick.alternatives.length >= 20, 'search evaluates a real candidate set (' + flowPick.alternatives.length + ')');
+assert(flowPick.layout.metrics.flow <= compactPick.layout.metrics.flow + 1,
+  'flow objective is not worse on material travel');
+assert(compactPick.layout.metrics.footprintArea <= flowPick.layout.metrics.footprintArea + 1,
+  'compact objective is not worse on footprint');
+assert(compactPick.layout.metrics.flow > flowPick.layout.metrics.flow,
+  'the two objectives trade flow against area on a tight floor');
+assert(compactPick.check.compliant, 'the compact pick is still fully compliant');
+
 /* 5. scaling sweep */
 console.log('\nSweep');
 let sweepBad = 0, sweepCount = 0;

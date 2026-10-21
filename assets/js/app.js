@@ -57,6 +57,7 @@
       machine1: Math.max(0, Math.round(num($('bMachine1'), 1))),
       machine2: Math.max(0, Math.round(num($('bMachine2'), 0)))
     };
+    state.objective = state.objective === 'compact' ? 'compact' : 'flow';
     return state;
   }
 
@@ -79,6 +80,9 @@
     $('bMachine1').value = (state.countsB || {}).machine1 || 0;
     $('bMachine2').value = (state.countsB || {}).machine2 || 0;
     setMode(state.mode === 'dual' ? 'dual' : 'single', true);
+    document.querySelectorAll('#objSeg .segbtn').forEach((btn) => {
+      btn.classList.toggle('on', btn.dataset.obj === (state.objective || 'flow'));
+    });
     if (opts && opts.activities) buildActivityRows();
     if (!opts || opts.fit !== false) needsFit = true;
   }
@@ -159,6 +163,10 @@
   function compute() {
     readState();
     refreshPlanPreview();
+    // keep the segmented controls in step with the state they drive
+    document.querySelectorAll('#objSeg .segbtn').forEach((btn) => {
+      btn.classList.toggle('on', btn.dataset.obj === state.objective);
+    });
     edited = false;
     history = [];
     try {
@@ -192,8 +200,9 @@
       $('statusPill').textContent = 'compliant';
       $('verdictText').textContent =
         'All ' + total + ' checks pass. Best of ' + result.alternatives.length +
-        ' generated arrangements — ' + (result.layout.metrics.flow / 1000).toFixed(1) +
-        ' m material travel, ' + result.layout.metrics.rows + ' process row(s).' + suffix;
+        ' arrangements for ' + (result.objective === 'compact' ? 'the smallest footprint' : 'shortest material flow') +
+        ' — ' + (result.layout.metrics.flow / 1000).toFixed(1) +
+        ' m travel, ' + result.layout.metrics.rows + ' row(s).' + suffix;
     } else if (fits) {
       el.className = 'verdict warn';
       $('statusPill').textContent = 'violations';
@@ -217,6 +226,10 @@
       : (m.snake ? 'serpentine' : 'straight') + ' · gap ' + (m.rowGap / 1000).toFixed(1) + ' m';
     $('kpiUtil').textContent = Math.round(m.utilisation * 100) + ' %';
     $('kpiRules').textContent = result.check.passCount + '/' + result.check.rules.length;
+    $('kpiFoot').textContent = (m.neededW / 1000).toFixed(1) + ' × ' + (m.neededH / 1000).toFixed(1) + ' m';
+    $('kpiFootEm').textContent = Math.round(m.footprintArea / 1e6) + ' m² · ' +
+      (result.objective === 'compact' ? 'compact' : 'flow');
+    $('kpiAlts').textContent = result.alternatives.length;
     $('stageNote').textContent = edited
       ? 'editing manually · drag resources · Ctrl+Z undo'
       : 'drag a resource to adjust · Ctrl+Z undo · ' + (m.snake ? 'serpentine' : 'straight') + ' flow';
@@ -352,6 +365,14 @@
 
   document.querySelectorAll('#modeSeg .segbtn').forEach((btn) => {
     btn.addEventListener('click', () => setMode(btn.dataset.mode));
+  });
+
+  document.querySelectorAll('#objSeg .segbtn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.objective = btn.dataset.obj === 'compact' ? 'compact' : 'flow';
+      needsFit = true;
+      compute();
+    });
   });
 
   ['hallW', 'hallH', 'jphInput', 'cRobots', 'cMachine1', 'cMachine2', 'cTrolley1', 'cTrolley2',

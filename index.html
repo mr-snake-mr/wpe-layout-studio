@@ -68,6 +68,13 @@
           <button type="button" class="segbtn" data-mode="dual">Two stations</button>
         </div>
       </div>
+      <div class="mode-row">
+        <span>Objective</span>
+        <div class="seg" id="objSeg">
+          <button type="button" class="segbtn on" data-obj="flow">Shortest flow</button>
+          <button type="button" class="segbtn" data-obj="compact">Compact cell</button>
+        </div>
+      </div>
       <p class="hint">Taken from the allocated area on the sample layout. Everything scale-dependent is recomputed live.</p>
     </section>
 
@@ -171,6 +178,8 @@
         <div class="kpi"><span>Process rows</span><strong id="kpiRows">–</strong><em id="kpiRowsEm">serpentine</em></div>
         <div class="kpi"><span>Space used</span><strong id="kpiUtil">–</strong><em>of cell area</em></div>
         <div class="kpi"><span>Rules passed</span><strong id="kpiRules">–</strong><em>of 8 checks</em></div>
+        <div class="kpi"><span>Cell footprint</span><strong id="kpiFoot">–</strong><em id="kpiFootEm">bounding box</em></div>
+        <div class="kpi"><span>Alternative</span><strong id="kpiAlts">–</strong><em>arrangements tried</em></div>
       </div>
     </section>
 
