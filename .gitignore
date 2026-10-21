@@ -12,3 +12,4 @@ desktop.ini
 wpe-layout-*.png
 wpe-layout-*.dxf
 wpe-layout-*.json
+tests/_out.dxf

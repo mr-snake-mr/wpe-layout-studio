@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+﻿name: Deploy to GitHub Pages
 
 on:
   push:
@@ -25,6 +25,7 @@ jobs:
       - name: Engine + wiring tests
         run: |
           node tests/run.js
+          node tests/render-smoke.js
           node tests/dom-check.js
 
   deploy:
@@ -41,3 +42,4 @@ jobs:
           path: .
       - id: deployment
         uses: actions/deploy-pages@v4
+

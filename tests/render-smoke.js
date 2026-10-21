@@ -88,5 +88,14 @@ const lines = csv.split('\r\n');
 assert(lines[0] === 'item,type,x_mm,y_mm,width_mm,depth_mm,area_m2', 'CSV header is stable');
 assert(lines.length === result.layout.items.length + 1, 'CSV has one row per resource');
 
+const fakeCanvas = { toDataURL: () => 'data:image/png;base64,AAAA' };
+const report = WPE.Exporters.reportHtml(state, result, fakeCanvas);
+assert(report.startsWith('<!doctype html>'), 'report is a full HTML document');
+assert(report.includes('Rule compliance') && report.includes('Resources placed'), 'report has compliance and BOM sections');
+assert(report.includes('data:image/png;base64'), 'report embeds the plan image');
+assert(report.includes('R1') && report.includes('R7'), 'report lists the clearance rules');
+assert((report.match(/<tr>/g) || []).length > 20, 'report tables are populated');
+assert(!report.includes('undefined'), 'report has no undefined values');
+
 console.log('\n' + (failures ? failures + ' renderer/export assertion(s) failed' : 'Renderer and exporters OK'));
 process.exit(failures ? 1 : 0);

@@ -392,6 +392,12 @@
     if (!result) return;
     X.download('wpe-layout-' + stamp() + '.json', X.summaryJson(state, result), 'application/json');
   });
+  $('exportReport').addEventListener('click', () => {
+    if (!result) return;
+    renderer.draw();
+    X.download('wpe-layout-report-' + stamp() + '.html',
+      X.reportHtml(state, result, canvas), 'text/html;charset=utf-8');
+  });
 
   /* rules reference in the about section */
   (function buildRulesRef() {

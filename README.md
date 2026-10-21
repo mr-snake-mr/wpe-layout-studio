@@ -74,12 +74,17 @@ The geometry engine is shared between the browser and Node, so the same code tha
 test:
 
 ```bash
-node tests/run.js        # engine: 3 presets, JPH maths, negative tests, 60-combination sweep
-node tests/dom-check.js  # every element the UI touches exists, every script/style resolves
+node tests/run.js           # engine: 3 presets, JPH maths, negative tests, 60-combination sweep
+node tests/render-smoke.js  # real canvas code against a stub context + DXF/JSON/CSV/report output
+node tests/dom-check.js     # every element the UI touches exists, every script/style resolves
+
+# DXF sanity check against a real CAD parser (optional, needs python + ezdxf)
+node tests/export-dxf.js && python tests/validate_dxf.py
 ```
 
 `tests/run.js` asserts that the featured stations and a 5 × 4 × 3 sweep of hall sizes / robot counts all produce
-layouts that pass all eight rules.
+layouts that pass all eight rules. The DXF produced for Station 1 opens in ezdxf as a valid R12 drawing in
+millimetres, with the ten expected layers, the full 24 × 13 m extent and zero audit errors.
 
 ## Export formats
 
@@ -88,7 +93,8 @@ layouts that pass all eight rules.
 | `.png` | Current canvas view |
 | `.dxf` | R12 DXF in millimetres, layers `HALL`, `WALKWAY`, `FENCE`, `ROBOT`, `MACHINE`, `FIXTURE`, `CONTROLLER`, `TROLLEY`, `FLOW`, `TEXT` — opens in AutoCAD / DraftSight / LibreCAD / any DWG tool |
 | `.json` | Inputs, KPIs, per-rule compliance, alternatives evaluated and full geometry |
-| BOM (via JSON) | Per-resource position, footprint and area |
+| `.html` | Self-contained report: plan image, KPIs, per-rule compliance, full resource table and assumptions — printable to PDF from any browser |
+| BOM (via JSON/CSV) | Per-resource position, footprint and area |
 
 ## Project structure
 
@@ -103,7 +109,10 @@ assets/js/renderer.js      canvas renderer (mm → px), pan / zoom / hit-test
 assets/js/exporters.js     DXF / JSON / CSV / PNG writers
 assets/js/app.js           DOM wiring
 tests/run.js               headless engine assertions
+tests/render-smoke.js      renderer + exporter assertions
 tests/dom-check.js         static wiring assertions
+tests/export-dxf.js        writes a DXF sample for the CAD validator
+tests/validate_dxf.py      ezdxf validation of that DXF (optional tool)
 ```
 
 ## Assumptions
