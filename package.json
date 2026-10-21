@@ -1,0 +1,12 @@
+{
+  "name": "wpe-layout-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rule-based shopfloor layout optimisation for WPE welding cells — JPH resource planning, clearance rules, walkway generation, DXF export.",
+  "keywords": ["shopfloor", "layout", "optimisation", "manufacturing", "welding", "dxf"],
+  "license": "MIT",
+  "scripts": {
+    "test": "node tests/run.js && node tests/dom-check.js",
+    "serve": "python -m http.server 8080"
+  }
+}

@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WPE Layout Studio — rule-based shopfloor layout optimisation</title>
+<meta name="description" content="Generative shopfloor layout optimiser for WPE welding cells: JPH based resource planning, clearance rules, pedestrian walkway generation and DXF export." />
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="2" y="2" width="28" height="28" rx="7" fill="#0ea5e9" opacity="0.15"/>
+      <path d="M7 11h7v4H9v6h5v-3h4v6H7z" fill="#38bdf8"/>
+      <path d="M18 8h7v3h-4v3h4v3h-4v3h4v3h-7z" fill="#f59e0b"/>
+    </svg>
+    <div>
+      <h1>WPE Layout Studio</h1>
+      <p>Rule-based shopfloor layout optimisation · welding cell</p>
+    </div>
+  </div>
+
+  <div class="topbar-actions">
+    <label class="field inline">
+      <span>Scenario</span>
+      <select id="presetSelect">
+        <option value="station1">Station 1 — 3 robots</option>
+        <option value="station2">Station 2 — 5 robots</option>
+        <option value="compact">Compact cell — 19 × 13 m</option>
+        <option value="custom">Custom</option>
+      </select>
+    </label>
+    <button id="optimizeBtn" class="btn primary">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg>
+      Optimise layout
+    </button>
+    <div class="btn-group">
+      <button id="exportPng" class="btn ghost" title="Download PNG">PNG</button>
+      <button id="exportDxf" class="btn ghost" title="Download DXF for any CAD tool">DXF</button>
+      <button id="exportJson" class="btn ghost" title="Download design + compliance JSON">JSON</button>
+    </div>
+  </div>
+</header>
+
+<main class="workspace">
+
+  <!-- ---------------- left: inputs ---------------- -->
+  <aside class="panel left" id="leftPanel">
+    <section class="block">
+      <h2>Shopfloor footprint</h2>
+      <div class="grid2">
+        <label class="field"><span>Length (m)</span>
+          <input id="hallW" type="number" min="4" max="200" step="0.5" value="24" />
+        </label>
+        <label class="field"><span>Width (m)</span>
+          <input id="hallH" type="number" min="4" max="200" step="0.5" value="13" />
+        </label>
+      </div>
+      <p class="hint">Taken from the allocated area on the sample layout. Everything scale-dependent is recomputed live.</p>
+    </section>
+
+    <section class="block">
+      <h2>Production plan</h2>
+      <label class="field"><span>Line rate — JPH (jobs / hour)</span>
+        <input id="jphInput" type="number" min="1" max="200" step="1" value="60" />
+      </label>
+      <div class="stat-row">
+        <div class="stat"><span>Cycle time</span><strong id="cycleOut">60.0 s</strong></div>
+        <div class="stat"><span>Takt</span><strong id="taktOut">60 jobs/h</strong></div>
+      </div>
+      <table class="mini-table" id="activityTable">
+        <thead><tr><th>Activity</th><th>Work time (s)</th><th>Res.</th></tr></thead>
+        <tbody id="activityBody"></tbody>
+      </table>
+      <button id="applyPlan" class="btn subtle wide">Apply resource plan →</button>
+      <p class="hint">Resources ≈ work time ÷ cycle time, rounded up — the method from the brief.</p>
+    </section>
+
+    <section class="block">
+      <h2>Resource counts</h2>
+      <div class="count-grid">
+        <label class="field"><span>Robots</span><input id="cRobots" type="number" min="0" max="12" step="1" value="3" /></label>
+        <label class="field"><span>Machine 1</span><input id="cMachine1" type="number" min="0" max="6" step="1" value="1" /></label>
+        <label class="field"><span>Machine 2</span><input id="cMachine2" type="number" min="0" max="6" step="1" value="1" /></label>
+        <label class="field"><span>Trolleys 1</span><input id="cTrolley1" type="number" min="0" max="24" step="1" value="8" /></label>
+        <label class="field"><span>Trolleys 2</span><input id="cTrolley2" type="number" min="0" max="12" step="1" value="1" /></label>
+        <label class="field"><span>Safety zones</span><input id="cZones" type="number" value="2" disabled /></label>
+      </div>
+      <p class="hint">Loading / unload fixtures, one robot controller per robot and the two fenced cells are derived automatically.</p>
+    </section>
+
+    <section class="block">
+      <h2>Rule thresholds</h2>
+      <div class="count-grid">
+        <label class="field"><span>Walkway (mm)</span><input id="rAisle" type="number" min="800" max="2400" step="50" value="1200" /></label>
+        <label class="field"><span>Robot–machine (mm)</span><input id="rRobotMachine" type="number" min="400" max="2000" step="50" value="800" /></label>
+        <label class="field"><span>Robot–robot (mm)</span><input id="rRobotRobot" type="number" min="400" max="2000" step="50" value="700" /></label>
+        <label class="field"><span>Fence clear (mm)</span><input id="rFence" type="number" min="300" max="1500" step="50" value="600" /></label>
+        <label class="field"><span>Trolley gap (mm)</span><input id="rTrolleyGap" type="number" min="50" max="600" step="25" value="100" /></label>
+      </div>
+      <button id="resetRules" class="btn subtle wide">Reset to brief values</button>
+    </section>
+  </aside>
+
+  <!-- ---------------- centre: canvas ---------------- -->
+  <section class="stage">
+    <div class="stage-toolbar">
+      <div class="seg">
+        <button id="zoomOut" class="icon-btn" title="Zoom out">−</button>
+        <button id="zoomIn" class="icon-btn" title="Zoom in">+</button>
+        <button id="fitBtn" class="icon-btn wide" title="Fit to screen">Fit</button>
+      </div>
+      <div class="seg toggles">
+        <button class="toggle on" data-opt="labels">Labels</button>
+        <button class="toggle on" data-opt="zones">Zones</button>
+        <button class="toggle on" data-opt="flow">Flow</button>
+        <button class="toggle on" data-opt="grid">Grid</button>
+      </div>
+      <span class="stage-note" id="stageNote">scroll to zoom · drag to pan</span>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="canvas"></canvas>
+      <div class="tooltip" id="tooltip" hidden></div>
+      <div class="legend">
+        <span><i class="sw machine"></i>Machine</span>
+        <span><i class="sw robot"></i>Robot</span>
+        <span><i class="sw fixture"></i>Fixture</span>
+        <span><i class="sw controller"></i>Controller</span>
+        <span><i class="sw trolley"></i>Trolley</span>
+        <span><i class="sw fence"></i>Safety fence</span>
+        <span><i class="sw walk"></i>Walkway</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- right: results ---------------- -->
+  <aside class="panel right">
+    <div class="verdict" id="verdict">
+      <div class="pill" id="statusPill">computing</div>
+      <p id="verdictText">Running the rule engine…</p>
+    </div>
+
+    <section class="block tight">
+      <h2>Layout KPIs</h2>
+      <div class="kpi-grid">
+        <div class="kpi"><span>Material flow</span><strong id="kpiFlow">–</strong><em>total travel</em></div>
+        <div class="kpi"><span>Process rows</span><strong id="kpiRows">–</strong><em id="kpiRowsEm">serpentine</em></div>
+        <div class="kpi"><span>Space used</span><strong id="kpiUtil">–</strong><em>of cell area</em></div>
+        <div class="kpi"><span>Rules passed</span><strong id="kpiRules">–</strong><em>of 8 checks</em></div>
+      </div>
+    </section>
+
+    <section class="block tight">
+      <h2>Rule compliance</h2>
+      <p class="hint">Click a rule to highlight the resources it refers to.</p>
+      <ul class="rule-list" id="ruleList"></ul>
+    </section>
+
+    <section class="block tight">
+      <h2>Alternatives evaluated</h2>
+      <ul class="alt-list" id="altList"></ul>
+      <div id="notes" class="notes"></div>
+    </section>
+  </aside>
+</main>
+
+<!-- ---------------- explainer ---------------- -->
+<section class="about">
+  <div class="about-grid">
+    <article>
+      <h2>The problem</h2>
+      <p>Factory floor space is scarce. Planners must fit machines, robots, fixtures, inspection points and material
+        storage into a fixed area while keeping material flow short, access safe and every clearance rule intact.
+        Today that means manual iteration after iteration.</p>
+      <p><strong>WPE Layout Studio</strong> turns the brief into an executable rule set: it derives the resource count
+        from the line rate, generates alternative shopfloor arrangements, scores each one against the clearances and
+        keeps the layout with the shortest material flow that is fully compliant.</p>
+    </article>
+    <article>
+      <h2>How JPH drives the layout</h2>
+      <div class="formula">cycle&nbsp;time = 3600 ÷ JPH</div>
+      <div class="formula">resources ≈ work&nbsp;time ÷ cycle&nbsp;time</div>
+      <p>At <strong>60 JPH</strong> a job must leave every <strong>60 s</strong>. A robot work content of 150 s therefore
+        needs <strong>3 robots</strong>; 280 s needs <strong>5</strong>. Those counts are the input to the planner, so the
+        drawing always matches the production target instead of a guess.</p>
+    </article>
+    <article>
+      <h2>Rule set enforced</h2>
+      <ol class="rules-ref" id="rulesRef"></ol>
+    </article>
+  </div>
+
+  <div class="pipeline">
+    <h2>Pipeline</h2>
+    <ol class="steps">
+      <li><span>1</span><div><strong>Input</strong><p>Hall footprint, JPH, activity times, resource counts, clearance thresholds.</p></div></li>
+      <li><span>2</span><div><strong>Plan</strong><p>Cycle time → robots; modules are built in process sequence with their own fenced cells and controller rows.</p></div></li>
+      <li><span>3</span><div><strong>Generate</strong><p>Modules are packed into serpentine rows across a range of row / module gaps — every alternative is a real candidate.</p></div></li>
+      <li><span>4</span><div><strong>Verify</strong><p>The rule engine recomputes all clearances from geometry, floods the walkway grid for continuity and rejects violations.</p></div></li>
+      <li><span>5</span><div><strong>Deliver</strong><p>Best compliant arrangement rendered on canvas, exported as PNG / DXF / JSON with a per-rule compliance record.</p></div></li>
+    </ol>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <span>WPE Layout Studio — hackathon build. Static site, no backend, no tracking.</span>
+  <span>Units: millimetres · model origin at the bottom-left of the hall</span>
+</footer>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/geometry.js"></script>
+<script src="assets/js/checker.js"></script>
+<script src="assets/js/planner.js"></script>
+<script src="assets/js/renderer.js"></script>
+<script src="assets/js/exporters.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
+

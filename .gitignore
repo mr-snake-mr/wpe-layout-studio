@@ -1,0 +1,14 @@
+node_modules/
+.sass-cache/
+dist/
+build/
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.tmp
+wpe-layout-*.png
+wpe-layout-*.dxf
+wpe-layout-*.json
