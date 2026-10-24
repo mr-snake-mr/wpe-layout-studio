@@ -21,7 +21,9 @@ the file-format problem entirely: no ODA licence, no DWG parser, no conversion s
 
 - **Hall**: one closed polyline on layer `WPE-HALL` (or the drawing extents of that layer). Converted to mm using the
   drawing's `INSUNITS`.
-- **Resources**: block references whose block name, or XDATA/attribute (`WPE-TYPE`), identifies the role — robot,
+- **Resources**: block references whose existing block name maps to a role (robot, machine, fixture,
+  controller, trolley) through the project mapping table, with the optional WPE-TYPE attribute as the fallback.
+  Everything else is ignored.
   machine, fixture, controller, trolley. Everything else is ignored.
 - **Footprint**: `GeometricExtents` in WCS, so rotation and scale are already baked in. Non-uniform scale flagged.
 - **Validation dialog** before any planning: found / unrecognised / unmeasurable counts, plus a list of the offending
