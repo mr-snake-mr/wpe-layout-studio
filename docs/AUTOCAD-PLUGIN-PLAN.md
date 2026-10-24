@@ -19,13 +19,26 @@ the file-format problem entirely: no ODA licence, no DWG parser, no conversion s
 
 ## 2. Read path — what the plugin needs from the drawing
 
-- **Hall**: one closed polyline on layer `WPE_HALL` (or the drawing extents of that layer). Converted to mm using the
+- **Hall**: one closed polyline on layer `WPE-HALL` (or the drawing extents of that layer). Converted to mm using the
   drawing's `INSUNITS`.
-- **Resources**: block references whose block name, or XDATA/attribute (`WPE_TYPE`), identifies the role — robot,
+- **Resources**: block references whose block name, or XDATA/attribute (`WPE-TYPE`), identifies the role — robot,
   machine, fixture, controller, trolley. Everything else is ignored.
 - **Footprint**: `GeometricExtents` in WCS, so rotation and scale are already baked in. Non-uniform scale flagged.
 - **Validation dialog** before any planning: found / unrecognised / unmeasurable counts, plus a list of the offending
   handles. This is the difference between a tool and a toy.
+
+### Naming — AutoCAD native, not a house scheme
+
+No invented prefixes. The plugin follows the conventions an AutoCAD user already expects:
+
+- **Only six reserved layers**, hyphen separated, uppercase, no spaces: `WPE-HALL` (boundary), `WPE-PLAN`,
+  `WPE-FENCE`, `WPE-WALK`, `WPE-DIM`, `WPE-TEXT`.
+- **Names stay inside AutoCAD's legal character set** — `< > / \ " : ; ? * | , =` are illegal, names are unique and
+  case-insensitive.
+- **Resource identity comes from the block name their library already uses**, resolved through a mapping table stored
+  per project. Nothing in their drawing is renamed to suit the tool.
+- **One optional attribute**, `WPE-TYPE`, disambiguates blocks whose names are shared. Optional, not mandatory.
+- **Commands are single tokens**, uppercase, no separators: `WPELAYOUT`, `WPECHECK`.
 
 Known bad cases, all of which must be reported rather than guessed: proxy objects from Architecture/Civil 3D,
 exploded blocks (plain lines, no identity), nested xrefs (traverse or require bind), annotative scaling, drawings in
@@ -42,7 +55,7 @@ Recommendation: embed for the pilot, decide on the port only if the plugin becom
 
 ## 4. Write path
 
-Inside one transaction: create layers `WPE_PLAN`, `WPE_FENCE`, `WPE_WALK`; insert blocks at the computed transforms;
+Inside one transaction: create layers `WPE-PLAN`, `WPE-FENCE`, `WPE-WALK`; insert blocks at the computed transforms;
 draw the fence as a closed polyline offset 600 from the robot envelope; hatch the walkway; add dimensions and labels.
 Source blocks are **not** moved or deleted — the plan is additive, so the review copy and the proposal sit side by side.
 Optionally a second command `WPELAYOUTAPPLY` that moves the originals once the plan is approved.
