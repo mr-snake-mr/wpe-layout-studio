@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 730" width="100%" role="img" aria-labelledby="flowTitle flowDesc" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title id="flowTitle">WPE Layout Studio pipeline</title>
+  <desc id="flowDesc">Seven-stage flow: input, resource plan, build modules, search arrangements, verify independently, select the best, deliver.</desc>
+
+  <defs>
+    <marker id="flowArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#98a6b8" style="fill:var(--color-text-tertiary, #98a6b8)"/>
+    </marker>
+  </defs>
+
+  <text x="40" y="42" font-size="14" font-weight="500" fill="#1a2230" style="fill:var(--color-text-primary, #1a2230)">How a plan is made</text>
+  <text x="40" y="62" font-size="12" fill="#5b6b80" style="fill:var(--color-text-secondary, #5b6b80)">Seven stages, each one visible in the tool.</text>
+
+  <!-- 1 · input -->
+  <rect x="60" y="80" width="580" height="56" rx="10" fill="#f7f8fa" stroke="#e3e7ee" style="fill:var(--color-background-secondary, #f7f8fa); stroke:var(--color-border-tertiary, #e3e7ee); stroke-width:1"/>
+  <circle cx="88" cy="108" r="13" fill="#e9f1f6" stroke="#3d6f94" style="fill:var(--color-viz-1-soft, #e9f1f6); stroke:var(--color-viz-1-ink, #3d6f94); stroke-width:1"/>
+  <text x="88" y="108" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#3d6f94" style="fill:var(--color-viz-1-ink, #3d6f94)">1</text>
+  <text x="112" y="101" font-size="13" font-weight="500" fill="#1a2230" style="fill:var(--color-text-primary, #1a2230)">Input</text>
+  <text x="112" y="120" font-size="12" fill="#5b6b80" style="fill:var(--color-text-secondary, #5b6b80)">Hall from a DXF or typed, line rate, resources, objective, one or two stations.</text>
+
+  <path d="M350 136 L350 158" fill="none" stroke="#98a6b8" style="stroke:var(--color-text-tertiary, #98a6b8); stroke-width:1" marker-end="url(#flowArrow)"/>
+
+  <!-- 2 · resource plan -->
+  <rect x="60" y="164" width="580" height="56" rx="10" fill="#f7f8fa" stroke="#e3e7ee" style="fill:var(--color-background-secondary, #f7f8fa); stroke:var(--color-border-tertiary, #e3e7ee); stroke-width:1"/>
+  <circle cx="88" cy="192" r="13" fill="#e9f1f6" stroke="#3d6f94" style="fill:var(--color-viz-1-soft, #e9f1f6); stroke:var(--color-viz-1-ink, #3d6f94); stroke-width:1"/>
+  <text x="88" y="192" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#3d6f94" style="fill:var(--color-viz-1-ink, #3d6f94)">2</text>
+  <text x="112" y="185" font-size="13" font-weight="500" fill="#1a2230" style="fill:var(--color-text-primary, #1a2230)">Resource plan</text>
+  <text x="112" y="204" font-size="12" fill="#5b6b80" style="fill:var(--color-text-secondary, #5b6b80)">Cycle time = 3600 ÷ JPH; robots = work ÷ cycle, rounded up.</text>
+
+  <path d="M350 220 L350 242" fill="none" stroke="#98a6b8" style="stroke:var(--color-text-tertiary, #98a6b8); stroke-width:1" marker-end="url(#flowArrow)"/>
+
+  <!-- 3 · modules -->
+  <rect x="60" y="248" width="580" height="56" rx="10" fill="#f7f8fa" stroke="#e3e7ee" style="fill:var(--color-background-secondary, #f7f8fa); stroke:var(--color-border-tertiary, #e3e7ee); stroke-width:1"/>
+  <circle cx="88" cy="276" r="13" fill="#e9f1f6" stroke="#3d6f94" style="fill:var(--color-viz-1-soft, #e9f1f6); stroke:var(--color-viz-1-ink, #3d6f94); stroke-width:1"/>
+  <text x="88" y="276" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#3d6f94" style="fill:var(--color-viz-1-ink, #3d6f94)">3</text>
+  <text x="112" y="269" font-size="13" font-weight="500" fill="#1a2230" style="fill:var(--color-text-primary, #1a2230)">Build modules</text>
+  <text x="112" y="288" font-size="12" fill="#5b6b80" style="fill:var(--color-text-secondary, #5b6b80)">Fixture, fenced robot cell, machine 1, machine 2, fenced cell, unload.</text>
+
+  <path d="M350 304 L350 326" fill="none" stroke="#98a6b8" style="stroke:var(--color-text-tertiary, #98a6b8); stroke-width:1" marker-end="url(#flowArrow)"/>
+
+  <!-- 4 · search -->
+  <rect x="60" y="332" width="580" height="56" rx="10" fill="#f7f8fa" stroke="#e3e7ee" style="fill:var(--color-background-secondary, #f7f8fa); stroke:var(--color-border-tertiary, #e3e7ee); stroke-width:1"/>
+  <circle cx="88" cy="360" r="13" fill="#e9f1f6" stroke="#3d6f94" style="fill:var(--color-viz-1-soft, #e9f1f6); stroke:var(--color-viz-1-ink, #3d6f94); stroke-width:1"/>
+  <text x="88" y="360" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#3d6f94" style="fill:var(--color-viz-1-ink, #3d6f94)">4</text>
+  <text x="112" y="353" font-size="13" font-weight="500" fill="#1a2230" style="fill:var(--color-text-primary, #1a2230)">Search arrangements</text>
+  <text x="112" y="372" font-size="12" fill="#5b6b80" style="fill:var(--color-text-secondary, #5b6b80)">30–50 candidates: row widths, machine orientation, gaps, flow direction.</text>
+
+  <path d="M350 388 L350 410" fill="none" stroke="#98a6b8" style="stroke:var(--color-text-tertiary, #98a6b8); stroke-width:1" marker-end="url(#flowArrow)"/>
+
+  <!-- 5 · verify, the focal stage -->
+  <rect x="60" y="416" width="580" height="56" rx="10" fill="#e9f1f6" stroke="#3d6f94" style="fill:var(--color-viz-1-soft, #e9f1f6); stroke:var(--color-viz-1-ink, #3d6f94); stroke-width:1.5"/>
+  <circle cx="88" cy="444" r="13" fill="#e9f1f6" stroke="#3d6f94" style="fill:var(--color-viz-1-soft, #e9f1f6); stroke:var(--color-viz-1-ink, #3d6f94); stroke-width:1"/>
+  <text x="88" y="444" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#3d6f94" style="fill:var(--color-viz-1-ink, #3d6f94)">5</text>
+  <text x="112" y="437" font-size="13" font-weight="500" fill="#3d6f94" style="fill:var(--color-viz-1-ink, #3d6f94)">Verify independently</text>
+  <text x="112" y="456" font-size="12" fill="#3d6f94" style="fill:var(--color-viz-1-ink, #3d6f94)">Eight clearance rules re-measured from the geometry; walkway proved as one loop.</text>
+
+  <path d="M350 472 L350 494" fill="none" stroke="#98a6b8" style="stroke:var(--color-text-tertiary, #98a6b8); stroke-width:1" marker-end="url(#flowArrow)"/>
+
+  <!-- 6 · select -->
+  <rect x="60" y="500" width="580" height="56" rx="10" fill="#f7f8fa" stroke="#e3e7ee" style="fill:var(--color-background-secondary, #f7f8fa); stroke:var(--color-border-tertiary, #e3e7ee); stroke-width:1"/>
+  <circle cx="88" cy="528" r="13" fill="#e9f1f6" stroke="#3d6f94" style="fill:var(--color-viz-1-soft, #e9f1f6); stroke:var(--color-viz-1-ink, #3d6f94); stroke-width:1"/>
+  <text x="88" y="528" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#3d6f94" style="fill:var(--color-viz-1-ink, #3d6f94)">6</text>
+  <text x="112" y="521" font-size="13" font-weight="500" fill="#1a2230" style="fill:var(--color-text-primary, #1a2230)">Select the best</text>
+  <text x="112" y="540" font-size="12" fill="#5b6b80" style="fill:var(--color-text-secondary, #5b6b80)">Cheapest compliant plan for the objective, or the size that would be needed.</text>
+
+  <path d="M350 556 L350 578" fill="none" stroke="#98a6b8" style="stroke:var(--color-text-tertiary, #98a6b8); stroke-width:1" marker-end="url(#flowArrow)"/>
+
+  <!-- 7 · deliver -->
+  <rect x="60" y="584" width="580" height="56" rx="10" fill="#f7f8fa" stroke="#e3e7ee" style="fill:var(--color-background-secondary, #f7f8fa); stroke:var(--color-border-tertiary, #e3e7ee); stroke-width:1"/>
+  <circle cx="88" cy="612" r="13" fill="#e9f1f6" stroke="#3d6f94" style="fill:var(--color-viz-1-soft, #e9f1f6); stroke:var(--color-viz-1-ink, #3d6f94); stroke-width:1"/>
+  <text x="88" y="612" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#3d6f94" style="fill:var(--color-viz-1-ink, #3d6f94)">7</text>
+  <text x="112" y="605" font-size="13" font-weight="500" fill="#1a2230" style="fill:var(--color-text-primary, #1a2230)">Deliver</text>
+  <text x="112" y="624" font-size="12" fill="#5b6b80" style="fill:var(--color-text-secondary, #5b6b80)">On screen, plus PNG, DXF, JSON, CSV and a printable report.</text>
+
+  <text x="60" y="668" font-size="12" fill="#5b6b80" style="fill:var(--color-text-secondary, #5b6b80)">Verification never depends on generation: the same eight checks run on a generated plan</text>
+  <text x="60" y="686" font-size="12" fill="#5b6b80" style="fill:var(--color-text-secondary, #5b6b80)">and on one dragged by hand, which is why the verdict can be trusted either way.</text>
+</svg>

@@ -8,7 +8,7 @@ travel short — instead of iterating manually.
 
 ![WPE Layout Studio — Station 2, five robots, 26 × 13 m hall, all eight rules passing](docs/preview.png)
 
-**Team quick reference (2 pages, for presenting):** [docs/WPE-Layout-Studio-quick-reference.pdf](docs/WPE-Layout-Studio-quick-reference.pdf)
+**Pipeline flowchart:** [docs/pipeline.svg](docs/pipeline.svg)  ·  **Team quick reference (2 pages):** [docs/WPE-Layout-Studio-quick-reference.pdf](docs/WPE-Layout-Studio-quick-reference.pdf)
 
 **Live app:** enable GitHub Pages for this repository (see [Deploy](#deploy)) or open `index.html` directly — there is
 no build step, no backend and no external dependency.
