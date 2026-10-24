@@ -24,7 +24,7 @@ no build step, no backend and no external dependency.
    unload fixture. Each fenced cell carries its own controllers *outside* the fence, so the 600 mm
    equipment-to-fence rule is satisfied by construction, not by luck.
 3. **Layout search.** Modules are packed into rows over a sweep of row-width caps, row and module gaps, flow directions
-   and machine orientation — 30 to 50 complete candidates per run, not a sketch. The winner is picked by a stated
+   and machine orientation — 25 to 50 complete candidates per run, not a sketch. The winner is picked by a stated
    objective: **shortest material flow** or **smallest footprint**, which diverge as soon as floor area is scarce
    (e.g. 21.2 m travel in 94 m² vs 22.7 m in 74 m² on an 18 × 13 m hall).
 4. **Rule verification.** The engine recomputes all clearances from the produced geometry and flood-fills a raster of

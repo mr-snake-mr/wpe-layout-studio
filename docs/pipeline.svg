@@ -43,7 +43,7 @@
   <circle cx="88" cy="360" r="13" fill="#e9f1f6" stroke="#3d6f94" style="fill:var(--color-viz-1-soft, #e9f1f6); stroke:var(--color-viz-1-ink, #3d6f94); stroke-width:1"/>
   <text x="88" y="360" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#3d6f94" style="fill:var(--color-viz-1-ink, #3d6f94)">4</text>
   <text x="112" y="353" font-size="13" font-weight="500" fill="#1a2230" style="fill:var(--color-text-primary, #1a2230)">Search arrangements</text>
-  <text x="112" y="372" font-size="12" fill="#5b6b80" style="fill:var(--color-text-secondary, #5b6b80)">30–50 candidates: row widths, machine orientation, gaps, flow direction.</text>
+  <text x="112" y="372" font-size="12" fill="#5b6b80" style="fill:var(--color-text-secondary, #5b6b80)">25–50 candidates: row widths, machine orientation, gaps, flow direction.</text>
 
   <path d="M350 388 L350 410" fill="none" stroke="#98a6b8" style="stroke:var(--color-text-tertiary, #98a6b8); stroke-width:1" marker-end="url(#flowArrow)"/>
 
